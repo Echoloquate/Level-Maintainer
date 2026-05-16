@@ -38,7 +38,7 @@ function AE2.requestItem(name, threshold, count, fluidName)
     local craftable = getCraftableForItem(name)
 
     if craftable then
-        local item = craftable.getItemStack()
+        local item = (craftable.getStack or craftable.getItemStack)(craftable)
         if threshold ~= nil then
             local itemInSystem = nil
             
