@@ -3,34 +3,38 @@ local ME = component.me_interface
 
 local AE2 = {}
 
--- Lightweight cache for specific items only
+-- Lightweight cache for specific items only.
+-- Values: a craftable userdata (hit), or `false` (negative lookup).
 local itemCache = {}
+local fluidNameCache = {} -- name -> fluid registry name, or false if the craftable has no fluid stack
 local cacheTimestamp = 0
 local CACHE_DURATION = 600 -- 10 minutes in seconds
 
 -- Function to get or cache a specific craftable item
 local function getCraftableForItem(itemName)
     local currentTime = os.time()
-    
-    -- Check if we have a cached version of this specific item and it's still valid
-    if itemCache[itemName] and currentTime - cacheTimestamp < CACHE_DURATION then
-        return itemCache[itemName]
+
+    local cached = itemCache[itemName]
+    if cached ~= nil and currentTime - cacheTimestamp < CACHE_DURATION then
+        if cached == false then return nil end
+        return cached
     end
-    
+
     -- If cache is too old, clear it completely to save memory
     if currentTime - cacheTimestamp >= CACHE_DURATION then
         itemCache = {}
+        fluidNameCache = {}
         cacheTimestamp = currentTime
     end
-    
+
     -- Look for this specific item in craftables
     local craftables = ME.getCraftables({["label"] = itemName})
     if #craftables >= 1 then
         itemCache[itemName] = craftables[1] -- Cache only this one item
         return craftables[1]
     end
-    
-    itemCache[itemName] = nil -- Cache that it's not craftable
+
+    itemCache[itemName] = false -- Cache the negative lookup so misspelled entries don't re-query every cycle
     return nil
 end
 
@@ -88,8 +92,13 @@ function AE2.requestFluid(name, threshold, count, fluidName)
     if craftable then
         if threshold ~= nil then
             if not fluidName then
-                local stack = (craftable.getStack or craftable.getItemStack)(craftable)
-                fluidName = stack and stack.name
+                local cached = fluidNameCache[name]
+                if cached == nil then
+                    local stack = (craftable.getStack or craftable.getItemStack)(craftable)
+                    cached = (stack and stack.name) or false
+                    fluidNameCache[name] = cached
+                end
+                if cached then fluidName = cached end
             end
 
             if fluidName then
@@ -128,9 +137,15 @@ function AE2.checkIfCrafting()
     return items
 end
 
+-- Returns true if the ME interface exposes the GTNH 2.9+ native fluid API.
+function AE2.hasFluidSupport()
+    return ME.getFluidInNetwork ~= nil
+end
+
 -- Function to manually clear the cache if needed
 function AE2.clearCache()
     itemCache = {}
+    fluidNameCache = {}
     cacheTimestamp = 0
 end
 

@@ -6,6 +6,11 @@ local items = cfg.items
 local fluids = cfg.fluids
 local sleepInterval = cfg.sleep
 
+if fluids and next(fluids) ~= nil and not ae2.hasFluidSupport() then
+    logInfo("WARNING: cfg.fluids is configured but the ME interface does not expose getFluidInNetwork (requires GTNH 2.9+). Fluid entries will be skipped.")
+    fluids = nil
+end
+
 while true do
     local itemsCrafting = ae2.checkIfCrafting()
 
