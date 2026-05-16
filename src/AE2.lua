@@ -80,16 +80,24 @@ function AE2.requestItem(name, threshold, count, fluidName)
 end
 
 -- Native fluid maintenance via getFluidInNetwork (GTNH 2.9+).
--- `name` is the fluid craftable label; `fluidName` is the fluid registry name.
+-- `name` is the fluid craftable label; `fluidName` is the fluid registry name and is
+-- auto-detected from the craftable's stack if omitted (pass it only as an override).
 function AE2.requestFluid(name, threshold, count, fluidName)
     local craftable = getCraftableForItem(name)
 
     if craftable then
-        if threshold ~= nil and fluidName then
-            local fluidInSystem = ME.getFluidInNetwork(fluidName)
-            local amount = fluidInSystem and (fluidInSystem.size or fluidInSystem.amount)
-            if amount and amount >= threshold then
-                return table.unpack({false, "The amount of " .. (fluidInSystem.label or name) .. " (" .. amount .. " mB) meets or exceeds threshold (" .. threshold .. " mB)! Aborting request."})
+        if threshold ~= nil then
+            if not fluidName then
+                local stack = (craftable.getStack or craftable.getItemStack)(craftable)
+                fluidName = stack and stack.name
+            end
+
+            if fluidName then
+                local fluidInSystem = ME.getFluidInNetwork(fluidName)
+                local amount = fluidInSystem and (fluidInSystem.size or fluidInSystem.amount)
+                if amount and amount >= threshold then
+                    return table.unpack({false, "The amount of " .. (fluidInSystem.label or name) .. " (" .. amount .. " mB) meets or exceeds threshold (" .. threshold .. " mB)! Aborting request."})
+                end
             end
         end
 

@@ -45,11 +45,11 @@ GTNH 2.9 unified items and fluids in the OpenComputers AE2 integration, so fluid
 
 ```lua
 cfg["fluids"] = {
-    ["Molten SpaceTime"] = {1000000, 1000, "spacetime"},
+    ["Molten SpaceTime"] = {1000000, 1000},
 }
 ```
 
-Pattern: `["fluid_label"] = {threshold_mb, batch_mb, fluid_registry_name}`. The label is the fluid's display name as shown in the AE crafting terminal; the registry name is the internal id (e.g. `spacetime`, `white_dwarf_matter`). Omit the block entirely on pre-2.9 setups.
+Pattern: `["fluid_label"] = {threshold_mb, batch_mb[, fluid_registry_name]}`. The label is the fluid's display name as shown in the AE crafting terminal. The fluid registry name is auto-detected from the craftable's stack -- pass it as a third value only as an override if auto-detection ever resolves to the wrong fluid. Omit the block entirely on pre-2.9 setups.
 
 **!! Threshold has a performance impact -- only add it when necessary, and preferably not on mainnet !!**
 
