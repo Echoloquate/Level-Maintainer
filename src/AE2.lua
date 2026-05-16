@@ -79,6 +79,34 @@ function AE2.requestItem(name, threshold, count, fluidName)
     return table.unpack({false, name .. " is not craftable!"})
 end
 
+-- Native fluid maintenance via getFluidInNetwork (GTNH 2.9+).
+-- `name` is the fluid craftable label; `fluidName` is the fluid registry name.
+function AE2.requestFluid(name, threshold, count, fluidName)
+    local craftable = getCraftableForItem(name)
+
+    if craftable then
+        if threshold ~= nil and fluidName then
+            local fluidInSystem = ME.getFluidInNetwork(fluidName)
+            local amount = fluidInSystem and (fluidInSystem.size or fluidInSystem.amount)
+            if amount and amount >= threshold then
+                return table.unpack({false, "The amount of " .. (fluidInSystem.label or name) .. " (" .. amount .. " mB) meets or exceeds threshold (" .. threshold .. " mB)! Aborting request."})
+            end
+        end
+
+        local craft = craftable.request(count)
+
+        while craft.isComputing() == true do
+            os.sleep(1)
+        end
+        if craft.hasFailed() then
+            return table.unpack({false, "Failed to request " .. name .. " x " .. count .. " mB"})
+        else
+            return table.unpack({true, "Requested " .. name .. " x " .. count .. " mB"})
+        end
+    end
+    return table.unpack({false, name .. " is not craftable!"})
+end
+
 function AE2.checkIfCrafting()
     local cpus = ME.getCpus()
     local items = {}

@@ -26,8 +26,31 @@ Maintainer
 
 # Config
 
-You can change maintained items in `config.lua`. Pattern is as follows: `["item_name"] = {threshold, batch_size}` as well as the time inbetween craft checks.
+You can change maintained items in `config.lua`. There are two blocks: `cfg.items` for regular items (and the legacy `ae2fc:fluid_drop` workaround) and `cfg.fluids` for native fluid maintenance on GTNH 2.9+.
 
-**!! Keep in mind that threshold should only be added if necessary and preferrably not in mainnet, since it has a performance impact !!**
+## Items
+
+```lua
+cfg["items"] = {
+    ["Osmium Dust"] = {nil, 64},                                  -- no threshold
+    ["drop of Molten SpaceTime"] = {1000000, 1, "spacetime"},     -- fluid drop with threshold + fluid name
+}
+```
+
+Pattern: `["item_label"] = {threshold, batch_size, fluid_name?}`. The third value is only needed for `ae2fc:fluid_drop` items and is the fluid's registry name -- this path works on any GTNH version.
+
+## Fluids (GTNH 2.9+)
+
+GTNH 2.9 unified items and fluids in the OpenComputers AE2 integration, so fluid craftables can now be requested directly without going through `ae2fc:fluid_drop`. Threshold checks use real fluid amounts in mB.
+
+```lua
+cfg["fluids"] = {
+    ["Molten SpaceTime"] = {1000000, 1000, "spacetime"},
+}
+```
+
+Pattern: `["fluid_label"] = {threshold_mb, batch_mb, fluid_registry_name}`. The label is the fluid's display name as shown in the AE crafting terminal; the registry name is the internal id (e.g. `spacetime`, `white_dwarf_matter`). Omit the block entirely on pre-2.9 setups.
+
+**!! Threshold has a performance impact -- only add it when necessary, and preferably not on mainnet !!**
 
 Reboot after changing values.
